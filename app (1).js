@@ -5,7 +5,7 @@
 ========================================================== */
 
 const STORAGE_KEY = "snapeats_state_v1";
-const GROQ_KEY_STORAGE = "snapeats_groq_key";
+const GROQ_KEY_STORAGE = "sgsk_4gXWBpPRas8WGk7Zoih2WGdyb3FYORt3eWjC4vyUszZo6zPw6IQ5D";
 const GROQ_MODEL = "qwen/qwen3.6-27b"; // Groq's current vision-capable model
 
 /* ---------------------------------------------------------
