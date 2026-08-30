@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#4C9A6A" />
+<title>SnapEats — Snap it. Know it. Grow it.</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="favicon-16.png" sizes="16x16" type="image/png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== INTRO SLIDES ===== -->
+<div id="introOverlay" class="intro-overlay" role="dialog" aria-label="Welcome to SnapEats">
+  <div class="intro-window">
+    <div class="intro-track" id="introTrack">
+      <div class="intro-slide">
+        <span class="intro-emoji">📸</span>
+        <h2>Snap your plate</h2>
+        <p>Photograph any meal — homemade or not — and let the camera do the counting.</p>
+      </div>
+      <div class="intro-slide">
+        <span class="intro-emoji">🧠</span>
+        <h2>AI reads the nutrition</h2>
+        <p>Calories, protein, carbs and fat, estimated in seconds from the photo alone.</p>
+      </div>
+      <div class="intro-slide">
+        <span class="intro-emoji">🌱</span>
+        <h2>Earn points, grow pets</h2>
+        <p>Stay within your calorie goal to earn points, then adopt pets in the garden shop.</p>
+      </div>
+    </div>
+    <div class="intro-dots" id="introDots"></div>
+    <div class="intro-actions">
+      <button id="introSkip" class="btn btn-ghost">Skip</button>
+      <button id="introNext" class="btn btn-primary">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NAV ===== -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#home" class="brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+          <circle cx="20" cy="20" r="18" fill="var(--leaf)"/>
+          <path d="M20 8c6 0 10 4 10 10 0 8-6 14-10 14S10 26 10 18c0-6 4-10 10-10z" fill="var(--cream)"/>
+          <path d="M20 8v10" stroke="var(--leaf)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </span>
+      SnapEats
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#scan">Scan</a>
+      <a href="#dashboard">Points</a>
+      <a href="#pets">Pets</a>
+      <a href="#settings">Settings</a>
+    </nav>
+    <div class="nav-right">
+      <div class="nav-points" id="navPoints" title="Your points">
+        <span class="seed-icon">🌱</span><span id="navPointsValue">0</span>
+      </div>
+      <button class="nav-burger" id="navBurger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <nav class="nav-links-mobile" id="navLinksMobile">
+    <a href="#scan">Scan</a>
+    <a href="#dashboard">Points</a>
+    <a href="#pets">Pets</a>
+    <a href="#settings">Settings</a>
+  </nav>
+</header>
+
+<!-- ===== HERO ===== -->
+<section id="home" class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">AI-powered nutrition, one snap at a time</p>
+      <h1>Snap your plate.<br>Meet your points.<br><span class="accent-underline">Grow your pets.</span></h1>
+      <p class="hero-sub">SnapEats uses AI image recognition to read the nutrition in any meal straight from a photo — homemade or not. Eat within your goal, earn points, and hatch a garden of pet companions.</p>
+      <div class="hero-cta">
+        <a href="#scan" class="btn btn-primary">Scan a meal</a>
+        <a href="#pets" class="btn btn-ghost">See the pets</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>10</strong><span>collectible pets</span></div>
+        <div><strong>AI</strong><span>vision, not guesswork</span></div>
+        <div><strong>0</strong><span>manual calorie math</span></div>
+      </div>
+    </div>
+    <div class="hero-scan-frame" aria-hidden="true">
+      <div class="scan-corner tl"></div>
+      <div class="scan-corner tr"></div>
+      <div class="scan-corner bl"></div>
+      <div class="scan-corner br"></div>
+      <div class="scan-line"></div>
+      <div class="scan-plate">🥗</div>
+      <div class="scan-readout">
+        <div class="chip">312 kcal</div>
+        <div class="chip chip-good">+18 pts</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how">
+  <div class="how-inner">
+    <div class="how-step">
+      <div class="how-frame"><span>📸</span></div>
+      <h3>1. Snap</h3>
+      <p>Take a photo of what's on your plate, or tell us it's homemade and list your ingredients instead.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-frame"><span>🧠</span></div>
+      <h3>2. Analyze</h3>
+      <p>Your photo (or ingredient list) is sent to SnapEats' backend, which asks Groq's AI to estimate calories, protein, carbs and fat.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-frame"><span>🌱</span></div>
+      <h3>3. Grow</h3>
+      <p>Stay under your calorie goal to earn points, then spend them adopting pets in the shop.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SCAN SECTION ===== -->
+<section id="scan" class="scan-section">
+  <div class="section-head">
+    <p class="eyebrow">Step into the kitchen</p>
+    <h2>What did you eat?</h2>
+    <p class="section-sub">Upload a photo for AI vision analysis, or switch to homemade mode and type your ingredients instead.</p>
+  </div>
+
+  <div class="scan-card">
+    <div class="mode-toggle" role="tablist" aria-label="Meal input mode">
+      <button class="mode-btn active" id="modePhotoBtn" role="tab" aria-selected="true">📷 Photo meal</button>
+      <button class="mode-btn" id="modeHomemadeBtn" role="tab" aria-selected="false">🍳 Homemade</button>
+    </div>
+
+    <!-- Photo mode -->
+    <div id="photoMode" class="mode-panel">
+      <label class="dropzone" id="dropzone" for="photoInput">
+        <div class="scan-corner tl"></div>
+        <div class="scan-corner tr"></div>
+        <div class="scan-corner bl"></div>
+        <div class="scan-corner br"></div>
+        <img id="preview" alt="" hidden />
+        <div id="dropzoneHint" class="dropzone-hint">
+          <span class="dropzone-icon">🍽️</span>
+          <span>Tap to take a photo or upload one</span>
+        </div>
+      </label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" hidden />
+      <textarea id="photoNote" class="ingredient-input" placeholder="Optional: add context, e.g. 'grilled chicken bowl, medium portion'" rows="2"></textarea>
+    </div>
+
+    <!-- Homemade mode -->
+    <div id="homemadeMode" class="mode-panel" hidden>
+      <label class="field-label" for="dishName">Dish name</label>
+      <input type="text" id="dishName" class="text-input" placeholder="e.g. Lentil soup" />
+      <label class="field-label" for="ingredientsInput">Ingredients &amp; rough quantities</label>
+      <textarea id="ingredientsInput" class="ingredient-input" rows="4" placeholder="e.g. 1 cup red lentils, 1 onion, 1 tbsp olive oil, 2 cups vegetable broth, 1 carrot"></textarea>
+      <label class="dropzone dropzone-small" for="homemadePhotoInput">
+        <img id="homemadePreview" alt="" hidden />
+        <div id="homemadeDropzoneHint" class="dropzone-hint">
+          <span class="dropzone-icon">📎</span>
+          <span>Optional: attach a photo too</span>
+        </div>
+      </label>
+      <input type="file" id="homemadePhotoInput" accept="image/*" capture="environment" hidden />
+    </div>
+
+    <button id="analyzeBtn" class="btn btn-primary btn-wide">Analyze with AI</button>
+    <p id="scanError" class="error-text" hidden></p>
+  </div>
+
+  <div id="resultCard" class="result-card" hidden>
+    <div class="result-head">
+      <h3 id="resultFoodName">Result</h3>
+      <span id="resultPointsBadge" class="chip chip-good">+0 pts</span>
+    </div>
+    <div class="result-grid">
+      <div class="stat"><span class="stat-value" id="statCalories">0</span><span class="stat-label">kcal</span></div>
+      <div class="stat"><span class="stat-value" id="statProtein">0g</span><span class="stat-label">protein</span></div>
+      <div class="stat"><span class="stat-value" id="statCarbs">0g</span><span class="stat-label">carbs</span></div>
+      <div class="stat"><span class="stat-value" id="statFat">0g</span><span class="stat-label">fat</span></div>
+    </div>
+    <p id="resultNote" class="result-note"></p>
+    <button id="logMealBtn" class="btn btn-primary btn-wide">Log this meal &amp; collect points</button>
+  </div>
+</section>
+
+<!-- ===== DASHBOARD ===== -->
+<section id="dashboard" class="dashboard-section">
+  <div class="section-head">
+    <p class="eyebrow">Your progress</p>
+    <h2>Points &amp; history</h2>
+  </div>
+  <div class="dashboard-grid">
+    <div class="dash-card points-card">
+      <span class="seed-icon big">🌱</span>
+      <div>
+        <span class="dash-big" id="dashPoints">0</span>
+        <span class="dash-label">total points</span>
+      </div>
+    </div>
+    <div class="dash-card">
+      <span class="dash-big" id="dashGoal">700</span>
+      <span class="dash-label">calorie goal / meal</span>
+      <input type="range" id="goalSlider" min="200" max="1500" step="10" value="700" />
+    </div>
+    <div class="dash-card">
+      <span class="dash-big" id="dashStreak">0</span>
+      <span class="dash-label">meals logged under goal</span>
+    </div>
+  </div>
+  <div class="history-wrap">
+    <h3>Meal log</h3>
+    <ul id="historyList" class="history-list">
+      <li class="history-empty">No meals logged yet — scan your first one above.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===== PET SHOP ===== -->
+<section id="pets" class="pets-section">
+  <div class="section-head">
+    <p class="eyebrow">Spend your points</p>
+    <h2>The garden shop</h2>
+    <p class="section-sub">Ten pets are waiting to be adopted. Earn points by eating within your goal, then bring them home.</p>
+  </div>
+  <div id="petGrid" class="pet-grid"></div>
+</section>
+
+<!-- ===== SETTINGS ===== -->
+<section id="settings" class="settings-section">
+  <div class="section-head">
+    <p class="eyebrow">Connect the brain</p>
+    <h2>Settings</h2>
+  </div>
+  <div class="settings-card">
+    <p class="field-hint">SnapEats talks to a small backend server that holds the Groq API key securely — no key ever appears in this page's code. Point the app at your deployed backend below.</p>
+    <label class="field-label" for="backendUrlInput">Backend URL</label>
+    <input type="text" id="backendUrlInput" class="text-input" placeholder="https://your-backend.onrender.com/api/analyze" autocomplete="off" />
+    <p class="field-hint">This should be the full URL to your backend's <code>/api/analyze</code> endpoint. See the project's README for how to deploy it for free.</p>
+    <button id="saveBackendBtn" class="btn btn-primary">Save backend URL</button>
+    <span id="backendStatus" class="key-status"></span>
+    <hr class="settings-divider" />
+    <button id="resetDataBtn" class="btn btn-ghost">Reset all progress</button>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>SnapEats — built for learning about AI-powered nutrition tracking. Not medical advice.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
