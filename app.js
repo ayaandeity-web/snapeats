@@ -14,7 +14,7 @@ const INTRO_SEEN_STORAGE = "snapeats_intro_seen";
    /api/analyze endpoint (see backend/ folder + README).
    The Groq API key lives only on that server, never here.
 --------------------------------------------------------- */
-const DEFAULT_BACKEND_URL = "https://YOUR-BACKEND-URL.onrender.com/api/analyze";
+const DEFAULT_BACKEND_URL = "https://snapeats-0w6l.onrender.com";
 
 /* ---------- Pet catalog (10 pets) ---------- */
 const PETS = [
