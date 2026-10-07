@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap Eats - Fresh Health & Nutrition Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            950: '#052e16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        /* Floating Leaves Canvas */
+        #leaf-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .app-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-brand-50/50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen relative flex flex-col selection:bg-brand-500 selection:text-white app-transition">
+
+    <!-- Floating Leaves Canvas Background -->
+    <canvas id="leaf-canvas"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <header class="sticky top-0 z-40 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-brand-100 dark:border-slate-800 app-transition">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                    <i class="fa-solid fa-leaf text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-emerald-500 bg-clip-text text-transparent">Snap Eats</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Fresh Health & Nutrition</p>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav class="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm">
+                    <i class="fa-solid fa-house"></i> Dashboard
+                </button>
+                <button onclick="switchTab('snap')" id="nav-snap" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-brand-600">
+                    <i class="fa-solid fa-camera"></i> Snap Photo
+                </button>
+                <button onclick="switchTab('log')" id="nav-log" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-brand-600">
+                    <i class="fa-solid fa-list-check"></i> Daily Log
+                </button>
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-brand-600">
+                    <i class="fa-solid fa-chart-pie"></i> Analytics
+                </button>
+                <button onclick="switchTab('shop')" id="nav-shop" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-brand-600">
+                    <i class="fa-solid fa-store"></i> Rewards Shop
+                </button>
+            </nav>
+
+            <!-- Right Controls: Streak, Points, Theme Toggle, GitHub Export -->
+            <div class="flex items-center gap-3">
+                <!-- Streak Badge -->
+                <div class="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-full text-amber-700 dark:text-amber-300 font-bold text-xs shadow-sm">
+                    <i class="fa-solid fa-fire text-amber-500 animate-bounce"></i>
+                    <span id="header-streak">0</span> Day Streak
+                </div>
+                <!-- Points Badge -->
+                <div class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-full text-emerald-700 dark:text-emerald-300 font-bold text-xs shadow-sm cursor-pointer" onclick="switchTab('shop')">
+                    <i class="fa-solid fa-coins text-emerald-500"></i>
+                    <span id="header-points">0</span> pts
+                </div>
+                <!-- GitHub Export Button -->
+                <button onclick="openGithubModal()" title="Export for GitHub" class="w-9 h-9 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 flex items-center justify-center hover:scale-105 transition-transform shadow-md">
+                    <i class="fa-brands fa-github text-sm"></i>
+                </button>
+                <!-- Theme Toggle -->
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-2 py-2 flex justify-around items-center">
+        <button onclick="switchTab('dashboard')" id="mob-dashboard" class="flex flex-col items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400">
+            <i class="fa-solid fa-house text-lg"></i> Home
+        </button>
+        <button onclick="switchTab('snap')" id="mob-snap" class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <i class="fa-solid fa-camera text-lg"></i> Snap
+        </button>
+        <button onclick="switchTab('log')" id="mob-log" class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <i class="fa-solid fa-list-check text-lg"></i> Log
+        </button>
+        <button onclick="switchTab('analytics')" id="mob-analytics" class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <i class="fa-solid fa-chart-pie text-lg"></i> Trends
+        </button>
+        <button onclick="switchTab('shop')" id="mob-shop" class="flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+            <i class="fa-solid fa-store text-lg"></i> Shop
+        </button>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10 pb-24 md:pb-12">
+
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <div id="tab-dashboard" class="space-y-6 tab-content">
+            <!-- Welcome Banner & Calorie Status -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Daily Summary Card -->
+                <div class="lg:col-span-2 bg-gradient-to-br from-white to-brand-50/50 dark:from-slate-900 dark:to-slate-900/50 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                            <span class="px-3 py-1 bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-xs rounded-full uppercase tracking-wider">Today's Fuel</span>
+                            <h2 class="text-2xl sm:text-3xl font-extrabold mt-2 tracking-tight">Nutrition Progress</h2>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Track your daily intake and maintain your calorie threshold.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="switchTab('snap')" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-brand-500/25 flex items-center gap-2 transition-all hover:scale-105">
+                                <i class="fa-solid fa-camera"></i> Snap Meal
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar & Stats -->
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <span class="text-sm text-slate-500 dark:text-slate-400">Consumed</span>
+                                <div class="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white"><span id="dash-consumed">0</span> <span class="text-lg font-medium text-slate-500">kcal</span></div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-sm text-slate-500 dark:text-slate-400">Daily Goal</span>
+                                <div class="text-xl sm:text-2xl font-bold text-brand-600 dark:text-brand-400"><span id="dash-goal">2,000</span> <span class="text-sm font-medium">kcal</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="w-full bg-slate-200 dark:bg-slate-800 h-4 rounded-full overflow-hidden p-0.5 shadow-inner">
+                            <div id="dash-progress-bar" class="bg-gradient-to-r from-brand-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+
+                        <!-- Remaining & Status -->
+                        <div class="flex justify-between items-center text-sm font-semibold pt-2">
+                            <span id="dash-remaining-text" class="text-slate-600 dark:text-slate-300">Remaining: <strong class="text-brand-600 dark:text-brand-400"><span id="dash-remaining">2,000</span> kcal</strong></span>
+                            <span id="dash-status-badge" class="px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold">On Track</span>
+                        </div>
+                    </div>
+
+                    <!-- Macro Breakdown Mini Cards -->
+                    <div class="grid grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 text-center">
+                            <span class="text-xs text-slate-400 font-medium">Protein</span>
+                            <div class="font-extrabold text-sm sm:text-base text-blue-600 dark:text-blue-400 mt-1"><span id="dash-protein">0</span>g</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 text-center">
+                            <span class="text-xs text-slate-400 font-medium">Carbs</span>
+                            <div class="font-extrabold text-sm sm:text-base text-amber-600 dark:text-amber-400 mt-1"><span id="dash-carbs">0</span>g</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 text-center">
+                            <span class="text-xs text-slate-400 font-medium">Fat</span>
+                            <div class="font-extrabold text-sm sm:text-base text-rose-600 dark:text-rose-400 mt-1"><span id="dash-fat">0</span>g</div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-100 dark:border-slate-700/50 text-center">
+                            <span class="text-xs text-slate-400 font-medium">Fiber</span>
+                            <div class="font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-400 mt-1"><span id="dash-fiber">0</span>g</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Goal Lock & BMI Threshold Card -->
+                <div class="bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-lg">BMI & Calorie Target</h3>
+                            <span id="goal-lock-badge" class="px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-full">Unlocked</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Goals are calculated based on BMI thresholds and strictly locked for 7 days upon setting.</p>
+                        
+                        <!-- BMI Form -->
+                        <div id="bmi-form-section" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-500">Weight (kg)</label>
+                                    <input type="number" id="bmi-weight" placeholder="70" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:border-brand-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-500">Height (cm)</label>
+                                    <input type="number" id="bmi-height" placeholder="175" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:border-brand-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-500">Age</label>
+                                    <input type="number" id="bmi-age" placeholder="25" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:border-brand-500">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-semibold text-slate-500">Goal Type</label>
+                                    <select id="bmi-goal-type" class="w-full mt-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:border-brand-500">
+                                        <option value="deficit">Fat Loss (Deficit)</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="surplus">Muscle Gain</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button onclick="calculateAndLockGoal()" class="w-full mt-2 py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-xl shadow-md transition-all">
+                                Calculate & Lock for 7 Days
+                            </button>
+                        </div>
+
+                        <!-- Active Lock Countdown View -->
+                        <div id="bmi-locked-section" class="hidden space-y-4">
+                            <div class="bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 p-4 rounded-2xl text-center">
+                                <span class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider">Current Locked Goal</span>
+                                <div class="text-3xl font-extrabold text-brand-700 dark:text-brand-300 mt-1"><span id="locked-target-val">2,000</span> kcal</div>
+                                <div class="text-xs text-slate-500 mt-2 flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-lock text-brand-500"></i> Locked for: <strong id="lock-countdown-timer">7d 00h remaining</strong>
+                                </div>
+                            </div>
+                            <p class="text-xs text-center text-slate-400">Manual calorie edits are disabled. All intake must be logged via Snap or Ingredient Calculator.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Action Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Snap Camera Card -->
+                <div onclick="switchTab('snap')" class="bg-gradient-to-br from-emerald-500 to-brand-600 text-white p-6 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.02] transition-all flex items-center justify-between group">
+                    <div>
+                        <span class="px-2.5 py-1 bg-white/20 text-white font-bold text-xs rounded-full">AI Analyzer</span>
+                        <h3 class="text-xl font-extrabold mt-3">Snap Food Photo</h3>
+                        <p class="text-xs text-white/80 mt-1">Instant recognition of meals, calories & macros.</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-12 transition-transform">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+
+                <!-- Ingredient Calculator Card -->
+                <div onclick="openChefChat()" class="bg-gradient-to-br from-teal-600 to-emerald-700 text-white p-6 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.02] transition-all flex items-center justify-between group">
+                    <div>
+                        <span class="px-2.5 py-1 bg-white/20 text-white font-bold text-xs rounded-full">Chef Assistant</span>
+                        <h3 class="text-xl font-extrabold mt-3">Homemade Calculator</h3>
+                        <p class="text-xs text-white/80 mt-1">Type ingredients or pick presets for instant macros.</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-12 transition-transform">
+                        <i class="fa-solid fa-hat-chef"></i>
+                    </div>
+                </div>
+
+                <!-- Rewards Shop Card -->
+                <div onclick="switchTab('shop')" class="bg-gradient-to-br from-amber-500 to-orange-600 text-white p-6 rounded-3xl shadow-xl cursor-pointer hover:scale-[1.02] transition-all flex items-center justify-between group">
+                    <div>
+                        <span class="px-2.5 py-1 bg-white/20 text-white font-bold text-xs rounded-full">Redeem Points</span>
+                        <h3 class="text-xl font-extrabold mt-3">Snap Eats Shop</h3>
+                        <p class="text-xs text-white/80 mt-1">Get smoothies, bowls & bars with earned points.</p>
+                    </div>
+                    <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl group-hover:rotate-12 transition-transform">
+                        <i class="fa-solid fa-store"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Log Quick Preview -->
+            <div class="bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Today's Meals Preview</h3>
+                    <button onclick="switchTab('log')" class="text-sm font-bold text-brand-600 dark:text-brand-400 hover:underline">View Full Log →</button>
+                </div>
+                <div id="dash-meals-list" class="space-y-3">
+                    <!-- Populated by JS -->
+                    <div class="text-center py-8 text-slate-400 text-sm">No meals logged yet today. Snap a photo or use the ingredient calculator to start!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: SNAP PHOTO CAMERA ================= -->
+        <div id="tab-snap" class="space-y-6 tab-content hidden">
+            <div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl">
+                <div class="text-center mb-6">
+                    <span class="px-3 py-1 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs rounded-full uppercase tracking-wider">AI Food Analyzer</span>
+                    <h2 class="text-2xl font-extrabold mt-2">Snap Your Meal</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Capture a live photo or upload from gallery for instant macro breakdown.</p>
+                </div>
+
+                <!-- Viewfinder Container -->
+                <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden shadow-inner flex items-center justify-center">
+                    <video id="camera-video" autoplay playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+                    <canvas id="camera-canvas" class="hidden"></canvas>
+                    <img id="captured-image-preview" class="absolute inset-0 w-full h-full object-cover hidden" alt="Captured Meal">
+
+                    <!-- Live Corner Brackets Overlay -->
+                    <div class="absolute inset-6 border-2 border-dashed border-white/50 rounded-xl pointer-events-none flex flex-col justify-between p-4">
+                        <div class="flex justify-between">
+                            <div class="w-6 h-6 border-t-2 border-l-2 border-brand-400"></div>
+                            <div class="w-6 h-6 border-t-2 border-r-2 border-brand-400"></div>
+                        </div>
+                        <div class="text-center text-white/70 text-xs font-bold tracking-widest uppercase bg-black/40 py-1 rounded-md backdrop-blur-sm">Align Food Inside Viewfinder</div>
+                        <div class="flex justify-between">
+                            <div class="w-6 h-6 border-b-2 border-l-2 border-brand-400"></div>
+                            <div class="w-6 h-6 border-b-2 border-r-2 border-brand-400"></div>
+                        </div>
+                    </div>
+
+                    <!-- Flash Effect overlay -->
+                    <div id="camera-flash" class="absolute inset-0 bg-white opacity-0 pointer-events-none transition-opacity duration-200"></div>
+                </div>
+
+                <!-- Camera Controls -->
+                <div class="flex items-center justify-center gap-6 mt-6">
+                    <label class="cursor-pointer px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-upload"></i> Upload
+                        <input type="file" accept="image/*" id="gallery-upload" class="hidden" onchange="handleGalleryUpload(event)">
+                    </label>
+
+                    <button onclick="takeSnapshot()" id="shutter-btn" class="w-16 h-16 rounded-full bg-brand-500 hover:bg-brand-600 text-white flex items-center justify-center shadow-lg shadow-brand-500/40 hover:scale-105 transition-all text-2xl">
+                        <i class="fa-solid fa-camera"></i>
+                    </button>
+
+                    <button onclick="flipCamera()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-sm font-bold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-rotate"></i> Flip
+                    </button>
+                </div>
+
+                <!-- Analysis Results Modal Section (Initially Hidden) -->
+                <div id="analysis-results-box" class="hidden mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-4 animate-fade-in">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span id="res-emoji" class="text-3xl">🥗</span>
+                            <div>
+                                <h3 id="res-meal-name" class="font-extrabold text-lg">Avocado Quinoa Salad</h3>
+                                <p class="text-xs text-slate-400">Confidence: <span id="res-confidence" class="font-bold text-brand-500">96%</span></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-extrabold text-brand-600 dark:text-brand-400"><span id="res-calories">450</span> <span class="text-xs text-slate-500">kcal</span></div>
+                            <span class="text-xs font-bold text-emerald-600">+<span id="res-points">45</span> Pts Earned</span>
+                        </div>
+                    </div>
+
+                    <!-- Ingredient Chips -->
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400">Detected Ingredients:</span>
+                        <div id="res-ingredients" class="flex flex-wrap gap-2 mt-2">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Macro Bars -->
+                    <div class="grid grid-cols-4 gap-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl text-center text-xs">
+                        <div>
+                            <span class="text-slate-400">Protein</span>
+                            <div class="font-bold text-blue-600 mt-1"><span id="res-p">18</span>g</div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Carbs</span>
+                            <div class="font-bold text-amber-600 mt-1"><span id="res-c">45</span>g</div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Fat</span>
+                            <div class="font-bold text-rose-600 mt-1"><span id="res-f">20</span>g</div>
+                        </div>
+                        <div>
+                            <span class="text-slate-400">Fiber</span>
+                            <div class="font-bold text-emerald-600 mt-1"><span id="res-fi">9</span>g</div>
+                        </div>
+                    </div>
+
+                    <button onclick="confirmLogSnapMeal()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-2xl shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transition-all">
+                        <i class="fa-solid fa-check-circle"></i> Log This Meal & Collect Points
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: DAILY LOG ================= -->
+        <div id="tab-log" class="space-y-6 tab-content hidden">
+            <div class="max-w-3xl mx-auto bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <span class="px-3 py-1 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs rounded-full uppercase tracking-wider">History</span>
+                        <h2 class="text-2xl font-extrabold mt-2">Today's Meal Log</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">All meals captured automatically via Snap or Ingredient Calculator.</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400">Total Today</span>
+                        <div class="text-2xl font-extrabold text-brand-600"><span id="log-total-cals">0</span> kcal</div>
+                    </div>
+                </div>
+
+                <!-- Meal Entries Container -->
+                <div id="full-meals-list" class="space-y-3">
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-utensils text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm font-semibold">No meals logged for today yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: ANALYTICS ================= -->
+        <div id="tab-analytics" class="space-y-6 tab-content hidden">
+            <div class="bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs rounded-full uppercase tracking-wider">Insights</span>
+                        <h2 class="text-2xl font-extrabold mt-2">Analytics & Trends</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Review your calorie compliance and macro consistency over time.</p>
+                    </div>
+                    <!-- 7 / 30 Day Toggle -->
+                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                        <button onclick="setAnalyticsRange(7)" id="range-btn-7" class="px-4 py-2 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-brand-600 shadow-sm transition-all">7 Days</button>
+                        <button onclick="setAnalyticsRange(30)" id="range-btn-30" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-brand-600 transition-all">30 Days</button>
+                    </div>
+                </div>
+
+                <!-- Summary Stat Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                        <span class="text-xs font-semibold text-slate-400">Avg Daily Calories</span>
+                        <div class="text-xl sm:text-2xl font-extrabold text-brand-600 mt-1"><span id="analytics-avg-cals">0</span> <span class="text-xs font-medium text-slate-400">kcal</span></div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                        <span class="text-xs font-semibold text-slate-400">Total Meals Logged</span>
+                        <div class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1"><span id="analytics-total-meals">0</span></div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                        <span class="text-xs font-semibold text-slate-400">Active Data Days</span>
+                        <div class="text-xl sm:text-2xl font-extrabold text-blue-600 mt-1"><span id="analytics-active-days">1</span></div>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                        <span class="text-xs font-semibold text-slate-400">Best Streak</span>
+                        <div class="text-xl sm:text-2xl font-extrabold text-amber-500 mt-1"><span id="analytics-best-streak">0</span> Days</div>
+                    </div>
+                </div>
+
+                <!-- Calorie Bar Chart vs Goal Line -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-sm">Calorie Intake vs Goal (Dashed Line)</h3>
+                        <div class="flex items-center gap-3 text-xs font-semibold">
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-brand-500 rounded-sm"></span> Under Goal</span>
+                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-rose-500 rounded-sm"></span> Over Goal</span>
+                        </div>
+                    </div>
+                    <div id="analytics-bar-chart" class="h-56 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 flex items-end justify-between gap-2 overflow-x-auto">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Streak History Grid -->
+                <div>
+                    <h3 class="font-bold text-sm mb-3">Streak Consistency Grid</h3>
+                    <div id="streak-grid" class="grid grid-cols-7 sm:grid-cols-14 gap-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: REWARDS SHOP ================= -->
+        <div id="tab-shop" class="space-y-6 tab-content hidden">
+            <div class="bg-white dark:bg-slate-900 border border-brand-100 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <span class="px-3 py-1 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold text-xs rounded-full uppercase tracking-wider">Rewards</span>
+                        <h2 class="text-2xl font-extrabold mt-2">Snap Eats Shop</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Redeem your earned points for healthy smoothies, protein bowls & bars!</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-4 py-2 rounded-2xl">
+                        <i class="fa-solid fa-coins text-emerald-500 text-lg"></i>
+                        <div>
+                            <span class="text-xs text-slate-400 block font-medium">Available Balance</span>
+                            <span class="font-extrabold text-emerald-700 dark:text-emerald-300"><span id="shop-user-points">0</span> Points</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shop Items Grid -->
+                <div id="shop-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Purchase History Section -->
+                <div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <h3 class="font-bold text-base mb-4">Redemption History</h3>
+                    <div id="shop-history-list" class="space-y-3">
+                        <div class="text-sm text-slate-400">No items redeemed yet. Keep logging meals to earn points!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= HOMEMADE INGREDIENT CALCULATOR (CHATBOX) ================= -->
+    <!-- Floating Chef Hat Button -->
+    <button onclick="toggleChefChat()" class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-gradient-to-tr from-brand-600 to-emerald-400 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl hover:scale-110 transition-transform group">
+        <i class="fa-solid fa-hat-chef group-hover:rotate-12 transition-transform"></i>
+    </button>
+
+    <!-- Spring-animated Chatbox Panel -->
+    <div id="chef-chat-panel" class="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-brand-200 dark:border-slate-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col transform translate-y-full opacity-0 pointer-events-none transition-all duration-300">
+        <!-- Chat Header -->
+        <div class="bg-gradient-to-r from-brand-600 to-emerald-500 p-4 text-white flex justify-between items-center">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-hat-chef"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm">Chef Snap (Ingredient Calc)</h3>
+                    <p class="text-xs text-white/80">Type ingredients or pick presets</p>
+                </div>
+            </div>
+            <button onclick="toggleChefChat()" class="w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center text-white transition-colors">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Quick Presets Bar -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 flex gap-2 overflow-x-auto text-xs">
+            <button onclick="loadPreset('2 eggs, 100g chicken breast, 1 cup rice')" class="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg font-semibold shadow-sm hover:border-brand-500 border border-transparent whitespace-nowrap">🍳 Chicken & Rice</button>
+            <button onclick="loadPreset('1 scoop protein, 1 banana, 250ml milk')" class="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg font-semibold shadow-sm hover:border-brand-500 border border-transparent whitespace-nowrap">🍌 Protein Shake</button>
+            <button onclick="loadPreset('150g salmon, 200g broccoli, 1 tbsp olive oil')" class="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg font-semibold shadow-sm hover:border-brand-500 border border-transparent whitespace-nowrap">🐟 Salmon & Greens</button>
+            <button onclick="loadPreset('2 slices toast, 1 avocado, 2 eggs')" class="px-3 py-1.5 bg-white dark:bg-slate-700 rounded-lg font-semibold shadow-sm hover:border-brand-500 border border-transparent whitespace-nowrap">🥑 Avocado Toast</button>
+        </div>
+
+        <!-- Chat Messages Area -->
+        <div id="chef-messages" class="p-4 h-72 overflow-y-auto space-y-3 text-xs">
+            <div class="flex gap-2">
+                <div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                    <i class="fa-solid fa-hat-chef"></i>
+                </div>
+                <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none text-slate-800 dark:text-slate-200">
+                    Hello! Tell me what you're cooking with quantities (e.g., <strong>2 eggs, 100g chicken, 1 cup rice</strong>), and I'll calculate your exact calories and macros!
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="p-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <form onsubmit="handleChefMessage(event)" class="flex gap-2">
+                <input type="text" id="chef-input" placeholder="e.g. 150g oats, 1 apple..." class="flex-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-brand-500">
+                <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl shadow-md transition-all text-xs">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= GITHUB EXPORT MODAL ================= -->
+    <div id="github-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-lg w-0.5 space-y-4 shadow-2xl animate-fade-in w-full">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-brands fa-github text-2xl"></i>
+                    <h3 class="font-bold text-lg">Upload to GitHub Instructions</h3>
+                </div>
+                <button onclick="closeGithubModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                You have the complete single-file source code for <strong>Snap Eats</strong> right here! Follow these steps to upload it to your GitHub repository:
+            </p>
+            <ol class="list-decimal list-inside text-xs space-y-2 text-slate-700 dark:text-slate-300 font-medium">
+                <li>Create a new repository on <a href="https://github.com" target="_blank" class="text-brand-600 underline">GitHub.com</a> (e.g. named <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">snap-eats</code>).</li>
+                <li>Save this entire page's code into a file named <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded font-bold">index.html</code>.</li>
+                <li>Upload <code class="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">index.html</code> to your repository (via web upload or git commands).</li>
+                <li>Enable <strong class="text-brand-600">GitHub Pages</strong> in your repository settings (Source: Deploy from branch <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">main</code> / <code class="bg-slate-100 dark:bg-slate-800 px-1 rounded">root</code>).</li>
+            </ol>
+            <div class="pt-2">
+                <button onclick="downloadCodeFile()" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg">
+                    <i class="fa-solid fa-download"></i> Download index.html File
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT APPLICATION LOGIC ================= -->
+    <script>
+        /* --- Floating Leaves Background Engine --- */
+        const canvas = document.getElementById('leaf-canvas');
+        const ctx = canvas.getContext('2d');
+        let leaves = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        for (let i = 0; i < 18; i++) {
+            leaves.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 12 + 8,
+                speedY: Math.random() * 0.8 + 0.3,
+                speedX: Math.random() * 0.5 - 0.25,
+                angle: Math.random() * Math.PI * 2,
+                spin: Math.random() * 0.03 - 0.015,
+                opacity: Math.random() * 0.4 + 0.15
+            });
+        }
+
+        function animateLeaves() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const isDark = document.documentElement.classList.contains('dark');
+            ctx.fillStyle = isDark ? 'rgba(74, 222, 128, 0.25)' : 'rgba(34, 197, 94, 0.25)';
+
+            leaves.forEach(leaf => {
+                leaf.y -= leaf.speedY;
+                leaf.x += Math.sin(leaf.angle) * 0.8 + leaf.speedX;
+                leaf.angle += leaf.spin;
+
+                if (leaf.y < -20) {
+                    leaf.y = canvas.height + 20;
+                    leaf.x = Math.random() * canvas.width;
+                }
+
+                ctx.save();
+                ctx.translate(leaf.x, leaf.y);
+                ctx.rotate(leaf.angle);
+                ctx.globalAlpha = leaf.opacity;
+
+                // Draw leaf shape
+                ctx.beginPath();
+                ctx.ellipse(0, 0, leaf.size, leaf.size / 2, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            });
+            requestAnimationFrame(animateLeaves);
+        }
+        animateLeaves();
+
+        /* --- App State & Persistence --- */
+        let state = JSON.parse(localStorage.getItem('snap_eats_state')) || {
+            points: 150,
+            streak: 5,
+            lastStreakDate: new Date().toDateString(),
+            calorieGoal: 2000,
+            goalLockedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            meals: [],
+            shopHistory: [],
+            analyticsRange: 7,
+            theme: 'light'
+        };
+
+        function saveState() {
+            localStorage.setItem('snap_eats_state', JSON.stringify(state));
+        }
+
+        /* --- Theme Management --- */
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                state.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                state.theme = 'dark';
+            }
+            saveState();
+        }
+
+        if (state.theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+
+        /* --- Tab Navigation --- */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            // Update Header Nav active state
+            ['dashboard', 'snap', 'log', 'analytics', 'shop'].forEach(t => {
+                const navBtn = document.getElementById('nav-' + t);
+                const mobBtn = document.getElementById('mob-' + t);
+                if (navBtn) {
+                    if (t === tabId) {
+                        navBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm";
+                    } else {
+                        navBtn.className = "px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-brand-600";
+                    }
+                }
+                if (mobBtn) {
+                    if (t === tabId) {
+                        mobBtn.className = "flex flex-col items-center gap-1 text-xs font-semibold text-brand-600 dark:text-brand-400";
+                    } else {
+                        mobBtn.className = "flex flex-col items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400";
+                    }
+                }
+            });
+
+            // Stop camera if leaving snap tab
+            if (tabId !== 'snap' && videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+            } else if (tabId === 'snap' && !videoStream) {
+                initCamera();
+            }
+
+            renderDashboard();
+            renderLog();
+            renderAnalytics();
+            renderShop();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        /* --- Dashboard & Calorie Logic --- */
+        function getTodayConsumed() {
+            const todayStr = new Date().toDateString();
+            return state.meals
+                .filter(m => new Date(m.timestamp).toDateString() === todayStr)
+                .reduce((acc, m) => acc + m.calories, 0);
+        }
+
+        function getTodayMacros() {
+            const todayStr = new Date().toDateString();
+            const todayMeals = state.meals.filter(m => new Date(m.timestamp).toDateString() === todayStr);
+            return todayMeals.reduce((acc, m) => ({
+                protein: acc.protein + (m.protein || 0),
+                carbs: acc.carbs + (m.carbs || 0),
+                fat: acc.fat + (m.fat || 0),
+                fiber: acc.fiber + (m.fiber || 0)
+            }), { protein: 0, carbs: 0, fat: 0, fiber: 0 });
+        }
+
+        function renderDashboard() {
+            document.getElementById('header-points').innerText = state.points;
+            document.getElementById('header-streak').innerText = state.streak;
+
+            const consumed = getTodayConsumed();
+            const goal = state.calorieGoal;
+            const remaining = Math.max(0, goal - consumed);
+            const pct = Math.min(100, Math.round((consumed / goal) * 100));
+
+            document.getElementById('dash-consumed').innerText = consumed;
+            document.getElementById('dash-goal').innerText = goal;
+            document.getElementById('dash-remaining').innerText = remaining;
+            document.getElementById('dash-progress-bar').style.width = pct + '%';
+
+            const macros = getTodayMacros();
+            document.getElementById('dash-protein').innerText = Math.round(macros.protein);
+            document.getElementById('dash-carbs').innerText = Math.round(macros.carbs);
+            document.getElementById('dash-fat').innerText = Math.round(macros.fat);
+            document.getElementById('dash-fiber').innerText = Math.round(macros.fiber);
+
+            // Status badge
+            const badge = document.getElementById('dash-status-badge');
+            if (consumed > goal) {
+                badge.className = "px-3 py-1 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 rounded-full text-xs font-bold";
+                badge.innerText = "Over Goal";
+            } else {
+                badge.className = "px-3 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-bold";
+                badge.innerText = "On Track";
+            }
+
+            // Goal lock countdown check
+            const now = new Date();
+            const lockUntil = new Date(state.goalLockedUntil);
+            const diffTime = lockUntil - now;
+            if (diffTime > 0) {
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById('bmi-form-section').classList.add('hidden');
+                document.getElementById('bmi-locked-section').classList.remove('hidden');
+                document.getElementById('locked-target-val').innerText = goal;
+                document.getElementById('lock-countdown-timer').innerText = `${diffDays}d ${diffHours}h remaining`;
+                document.getElementById('goal-lock-badge').className = "px-2.5 py-1 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs font-bold rounded-full";
+                document.getElementById('goal-lock-badge').innerText = "Locked";
+            } else {
+                document.getElementById('bmi-form-section').classList.remove('hidden');
+                document.getElementById('bmi-locked-section').classList.add('hidden');
+                document.getElementById('goal-lock-badge').className = "px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-full";
+                document.getElementById('goal-lock-badge').innerText = "Unlocked";
+            }
+
+            // Render Preview Meals
+            const dashMealsList = document.getElementById('dash-meals-list');
+            const todayStr = new Date().toDateString();
+            const todayMeals = state.meals.filter(m => new Date(m.timestamp).toDateString() === todayStr);
+
+            if (todayMeals.length === 0) {
+                dashMealsList.innerHTML = `<div class="text-center py-6 text-slate-400 text-sm">No meals logged yet today. Snap a photo or use the ingredient calculator to start!</div>`;
+            } else {
+                dashMealsList.innerHTML = todayMeals.slice(-3).reverse().map(m => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${m.emoji || '🍽️'}</span>
+                            <div>
+                                <h4 class="font-bold text-sm">${m.name}</h4>
+                                <span class="text-xs text-slate-400">${new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • <strong class="text-brand-600">${m.source}</strong></span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-extrabold text-sm">${m.calories} kcal</div>
+                            <span class="text-xs font-bold text-emerald-600">+${m.pointsEarned} pts</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function calculateAndLockGoal() {
+            const w = parseFloat(document.getElementById('bmi-weight').value) || 70;
+            const h = parseFloat(document.getElementById('bmi-height').value) || 175;
+            const a = parseInt(document.getElementById('bmi-age').value) || 25;
+            const type = document.getElementById('bmi-goal-type').value;
+
+            const heightM = h / 100;
+            const bmi = w / (heightM * heightM);
+
+            // BMR Calculation (Mifflin-St Jeor approx)
+            let bmr = 10 * w + 6.25 * h - 5 * a + 5;
+            let target = Math.round(bmr * 1.375); // moderate activity
+
+            if (type === 'deficit') target -= 500;
+            if (type === 'surplus') target += 400;
+
+            state.calorieGoal = Math.max(1200, target);
+            state.goalLockedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            saveState();
+            renderDashboard();
+        }
+
+        /* --- Camera & Snap Analyzer Engine --- */
+        let videoStream = null;
+        let currentFacingMode = 'environment';
+        let lastAnalyzedMeal = null;
+
+        async function initCamera() {
+            const video = document.getElementById('camera-video');
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode }
+                });
+                video.srcObject = videoStream;
+                video.classList.remove('hidden');
+                document.getElementById('captured-image-preview').classList.add('hidden');
+            } catch (err) {
+                console.warn('Camera access error or unavailable:', err);
+            }
+        }
+
+        function flipCamera() {
+            currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+            if (videoStream) {
+                videoStream.getTracks().forEach(t => t.stop());
+            }
+            initCamera();
+        }
+
+        function handleGalleryUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('captured-image-preview');
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove('hidden');
+                document.getElementById('camera-video').classList.add('hidden');
+                if (videoStream) {
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
+                runAnalysisEngine();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function takeSnapshot() {
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('camera-canvas');
+            const imgPreview = document.getElementById('captured-image-preview');
+            const flash = document.getElementById('camera-flash');
+
+            // Flash effect
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 200);
+
+            if (videoStream) {
+                canvas.width = video.videoWidth || 640;
+                canvas.height = video.videoHeight || 480;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                imgPreview.src = canvas.toDataURL('image/png');
+            } else {
+                // Fallback demo image if camera isn't active
+                imgPreview.src = "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600";
+            }
+
+            imgPreview.classList.remove('hidden');
+            video.classList.add('hidden');
+            if (videoStream) {
+                videoStream.getTracks().forEach(t => t.stop());
+                videoStream = null;
+            }
+
+            runAnalysisEngine();
+        }
+
+        const mealArchetypes = [
+            { name: "Avocado Quinoa Salad", emoji: "🥗", cals: 420, p: 16, c: 48, f: 19, fi: 11, ingredients: ["Avocado", "Quinoa", "Cherry Tomatoes", "Baby Spinach", "Olive Oil"] },
+            { name: "Grilled Salmon & Asparagus", emoji: "🐟", cals: 510, p: 38, c: 12, f: 24, fi: 5, ingredients: ["Salmon Fillet", "Asparagus", "Lemon", "Garlic Butter", "Herbs"] },
+            { name: "Acai Superfood Bowl", emoji: "🍓", cals: 380, p: 12, c: 65, f: 9, fi: 8, ingredients: ["Acai Puree", "Granola", "Blueberries", "Chia Seeds", "Banana Slices"] },
+            { name: "Chicken Protein Bowl", emoji: "🍗", cals: 580, p: 48, c: 52, f: 14, fi: 6, ingredients: ["Chicken Breast", "Brown Rice", "Broccoli", "Sweet Potato", "Sesame Seeds"] },
+            { name: "Green Detox Smoothie", emoji: "🥑", cals: 260, p: 15, c: 32, f: 8, fi: 7, ingredients: ["Spinach", "Green Apple", "Protein Powder", "Almond Milk", "Flaxseed"] }
+        ];
+
+        function runAnalysisEngine() {
+            // Pick a random archetype or simulate color matching
+            const match = mealArchetypes[Math.floor(Math.random() * mealArchetypes.length)];
+            const pointsEarned = Math.round(match.cals / 10);
+
+            lastAnalyzedMeal = {
+                name: match.name,
+                emoji: match.emoji,
+                calories: match.cals,
+                protein: match.p,
+                carbs: match.c,
+                fat: match.f,
+                fiber: match.fi,
+                ingredients: match.ingredients,
+                source: "Snap AI",
+                pointsEarned: pointsEarned,
+                timestamp: new Date().toISOString()
+            };
+
+            document.getElementById('res-emoji').innerText = match.emoji;
+            document.getElementById('res-meal-name').innerText = match.name;
+            document.getElementById('res-confidence').innerText = (Math.floor(Math.random() * 6) + 94) + '%';
+            document.getElementById('res-calories').innerText = match.cals;
+            document.getElementById('res-points').innerText = pointsEarned;
+            document.getElementById('res-p').innerText = match.p;
+            document.getElementById('res-c').innerText = match.c;
+            document.getElementById('res-f').innerText = match.f;
+            document.getElementById('res-fi').innerText = match.fi;
+
+            const ingContainer = document.getElementById('res-ingredients');
+            ingContainer.innerHTML = match.ingredients.map(i => `<span class="px-2.5 py-1 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 text-brand-700 dark:text-brand-300 text-xs font-bold rounded-lg">${i}</span>`).join('');
+
+            document.getElementById('analysis-results-box').classList.remove('hidden');
+        }
+
+        function confirmLogSnapMeal() {
+            if (!lastAnalyzedMeal) return;
+            state.meals.push(lastAnalyzedMeal);
+            state.points += lastAnalyzedMeal.pointsEarned;
+            saveState();
+            switchTab('dashboard');
+            lastAnalyzedMeal = null;
+            document.getElementById('analysis-results-box').classList.add('hidden');
+        }
+
+        /* --- Homemade Meal Ingredient Calculator (Chatbox) --- */
+        function toggleChefChat() {
+            const panel = document.getElementById('chef-chat-panel');
+            if (panel.classList.contains('translate-y-full')) {
+                panel.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            } else {
+                panel.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function loadPreset(presetText) {
+            document.getElementById('chef-input').value = presetText;
+        }
+
+        function handleChefMessage(event) {
+            event.preventDefault();
+            const inputEl = document.getElementById('chef-input');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            const msgContainer = document.getElementById('chef-messages');
+            
+            // Append user message
+            msgContainer.innerHTML += `
+                <div class="flex gap-2 justify-end">
+                    <div class="bg-brand-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%]">${text}</div>
+                </div>
+            `;
+            inputEl.value = '';
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Simulate parsing and calculation
+            setTimeout(() => {
+                // Simple deterministic calorie parser based on string length or keywords
+                let cals = 450;
+                let p = 30, c = 40, f = 15, fi = 6;
+                const lower = text.toLowerCase();
+                if (lower.includes('egg')) { cals += 150; p += 12; }
+                if (lower.includes('chicken')) { cals += 250; p += 35; }
+                if (lower.includes('salmon')) { cals += 320; p += 32; f += 18; }
+                if (lower.includes('rice')) { cals += 200; c += 45; }
+                if (lower.includes('protein')) { cals += 160; p += 25; }
+
+                const points = Math.round(cals / 10);
+
+                msgContainer.innerHTML += `
+                    <div class="flex gap-2">
+                        <div class="w-7 h-7 rounded-full bg-brand-600 text-white flex items-center justify-center flex-shrink-0 text-xs">
+                            <i class="fa-solid fa-hat-chef"></i>
+                        </div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none space-y-2 text-slate-800 dark:text-slate-200 w-full">
+                            <div>Analyzed your recipe! Total: <strong>${cals} kcal</strong></div>
+                            <div class="grid grid-cols-4 gap-1 text-center text-[10px] bg-white dark:bg-slate-700 p-2 rounded-xl">
+                                <div>P: <b>${p}g</b></div>
+                                <div>C: <b>${c}g</b></div>
+                                <div>F: <b>${f}g</b></div>
+                                <div>Fi: <b>${fi}g</b></div>
+                            </div>
+                            <button onclick="logChefMeal('${text.replace(/'/g, "")}', ${cals}, ${p}, ${c}, ${f}, ${fi}, ${points})" class="w-full py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition-all">
+                                Log ${cals} kcal (+${points} pts)
+                            </button>
+                        </div>
+                    </div>
+                `;
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+            }, 600);
+        }
+
+        function logChefMeal(name, cals, p, c, f, fi, points) {
+            const newMeal = {
+                name: name.length > 25 ? name.substring(0, 22) + '...' : name,
+                emoji: '🍳',
+                calories: cals,
+                protein: p,
+                carbs: c,
+                fat: f,
+                fiber: fi,
+                source: 'Ingredients',
+                pointsEarned: points,
+                timestamp: new Date().toISOString()
+            };
+            state.meals.push(newMeal);
+            state.points += points;
+            saveState();
+            toggleChefChat();
+            switchTab('dashboard');
+        }
+
+        /* --- Daily Log Tab Rendering --- */
+        function renderLog() {
+            const list = document.getElementById('full-meals-list');
+            const totalCalsEl = document.getElementById('log-total-cals');
+            const todayStr = new Date().toDateString();
+            const todayMeals = state.meals.filter(m => new Date(m.timestamp).toDateString() === todayStr);
+
+            const totalCals = todayMeals.reduce((acc, m) => acc + m.calories, 0);
+            totalCalsEl.innerText = totalCals;
+
+            if (todayMeals.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-utensils text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm font-semibold">No meals logged for today yet.</p>
+                    </div>
+                `;
+            } else {
+                list.innerHTML = todayMeals.slice().reverse().map((m, idx) => `
+                    <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${m.emoji || '🍽️'}</span>
+                            <div>
+                                <h4 class="font-bold text-sm sm:text-base">${m.name}</h4>
+                                <div class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                                    <span>${new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    <span>•</span>
+                                    <span class="px-2 py-0.5 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 rounded font-bold">${m.source}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <div class="font-extrabold text-sm sm:text-base">${m.calories} kcal</div>
+                                <span class="text-xs font-bold text-emerald-600">+${m.pointsEarned} pts</span>
+                            </div>
+                            <button onclick="deleteMeal(${state.meals.length - 1 - idx})" class="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function deleteMeal(index) {
+            state.meals.splice(index, 1);
+            saveState();
+            renderDashboard();
+            renderLog();
+        }
+
+        /* --- Analytics Tab Rendering --- */
+        function setAnalyticsRange(days) {
+            state.analyticsRange = days;
+            document.getElementById('range-btn-7').className = days === 7 ? "px-4 py-2 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-brand-600 shadow-sm transition-all" : "px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-brand-600 transition-all";
+            document.getElementById('range-btn-30').className = days === 30 ? "px-4 py-2 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-brand-600 shadow-sm transition-all" : "px-4 py-2 rounded-lg text-xs font-bold text-slate-500 hover:text-brand-600 transition-all";
+            renderAnalytics();
+        }
+
+        function renderAnalytics() {
+            const range = state.analyticsRange || 7;
+            document.getElementById('analytics-best-streak').innerText = state.streak;
+            document.getElementById('analytics-total-meals').innerText = state.meals.length;
+            document.getElementById('analytics-active-days').innerText = Math.min(range, Math.max(1, state.meals.length));
+
+            // Calculate past days calories
+            let totalCalsSum = 0;
+            let daysWithData = 0;
+            const chartContainer = document.getElementById('analytics-bar-chart');
+            chartContainer.innerHTML = '';
+
+            for (let i = range - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = d.toDateString();
+                const dayMeals = state.meals.filter(m => new Date(m.timestamp).toDateString() === dStr);
+                const dayCals = dayMeals.reduce((acc, m) => acc + m.calories, 0);
+
+                if (dayMeals.length > 0) {
+                    totalCalsSum += dayCals;
+                    daysWithData++;
+                }
+
+                const heightPct = Math.min(100, Math.round((dayCals / state.calorieGoal) * 100));
+                const isOver = dayCals > state.calorieGoal;
+                const barColor = dayCals === 0 ? 'bg-slate-200 dark:bg-slate-800' : (isOver ? 'bg-rose-500' : 'bg-brand-500');
+
+                chartContainer.innerHTML += `
+                    <div class="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative">
+                        <div class="absolute -top-8 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                            ${d.toLocaleDateString([], {month: 'short', day: 'numeric'})}: ${dayCals} kcal
+                        </div>
+                        <span class="text-[9px] text-slate-400">${d.toLocaleDateString([], {weekday: 'narrow'})}</span>
+                        <div class="w-full max-w-[28px] ${barColor} rounded-t-lg transition-all" style="height: ${Math.max(8, heightPct)}%"></div>
+                    </div>
+                `;
+            }
+
+            const avgCals = daysWithData > 0 ? Math.round(totalCalsSum / daysWithData) : getTodayConsumed();
+            document.getElementById('analytics-avg-cals').innerText = avgCals;
+
+            // Streak History Grid
+            const streakGrid = document.getElementById('streak-grid');
+            streakGrid.innerHTML = '';
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const isActive = i <= state.streak;
+                streakGrid.innerHTML += `
+                    <div class="aspect-square rounded-xl ${isActive ? 'bg-brand-500 shadow-sm shadow-brand-500/30' : 'bg-slate-200 dark:bg-slate-800'} flex items-center justify-center text-[10px] text-white font-bold" title="${d.toDateString()}">
+                        ${d.getDate()}
+                    </div>
+                `;
+            }
+        }
+
+        /* --- Rewards Shop Tab Rendering --- */
+        const shopProducts = [
+            { id: 1, name: "Green Glow Smoothie", category: "Drink", points: 120, emoji: "🥤", desc: "Spinach, avocado, kiwi & organic plant protein." },
+            { id: 2, name: "Acai Power Protein Bowl", category: "Meal", points: 250, emoji: "🥣", desc: "Pure acai with hemp seeds, almonds and fresh berries." },
+            { id: 3, name: "Matcha Energy Bar", category: "Snack", points: 80, emoji: "🟩", desc: "Ceremonial grade matcha with dates and almonds." },
+            { id: 4, name: "Chia Seed Pudding Cup", category: "Snack", points: 95, emoji: "🥥", desc: "Coconut milk chia pudding with mango puree." },
+            { id: 5, name: "Grilled Chicken Salad Box", category: "Meal", points: 300, emoji: "🥗", desc: "Organic greens, grilled chicken breast & honey mustard." },
+            { id: 6, name: "Electrolyte Hydration Flask", category: "Gear", points: 450, emoji: "🧴", desc: "Stainless steel insulated bottle with fruit infuser." }
+        ];
+
+        function renderShop() {
+            document.getElementById('shop-user-points').innerText = state.points;
+            const grid = document.getElementById('shop-items-grid');
+
+            grid.innerHTML = shopProducts.map(p => {
+                const canAfford = state.points >= p.points;
+                return `
+                    <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-3xl p-5 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="text-4xl">${p.emoji}</span>
+                                <span class="px-2.5 py-1 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 font-bold text-xs rounded-full">${p.category}</span>
+                            </div>
+                            <h3 class="font-bold text-lg">${p.name}</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${p.desc}</p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between">
+                            <div class="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm flex items-center gap-1">
+                                <i class="fa-solid fa-coins"></i> ${p.points} pts
+                            </div>
+                            <button onclick="redeemShopItem(${p.id})" ${canAfford ? '' : 'disabled'} class="px-4 py-2 rounded-xl text-xs font-bold transition-all ${canAfford ? 'bg-brand-600 hover:bg-brand-500 text-white shadow-md shadow-brand-500/25' : 'bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed'}">
+                                ${canAfford ? 'Redeem' : 'Need Points'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // History
+            const histList = document.getElementById('shop-history-list');
+            if (state.shopHistory.length === 0) {
+                histList.innerHTML = `<div class="text-sm text-slate-400">No items redeemed yet. Keep logging meals to earn points!</div>`;
+            } else {
+                histList.innerHTML = state.shopHistory.slice().reverse().map(item => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 text-xs">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${item.emoji}</span>
+                            <div>
+                                <h4 class="font-bold">${item.name}</h4>
+                                <span class="text-slate-400">${new Date(item.timestamp).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <span class="font-bold text-rose-600">-${item.points} pts</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function redeemShopItem(productId) {
+            const product = shopProducts.find(p => p.id === productId);
+            if (!product || state.points < product.points) return;
+
+            state.points -= product.points;
+            state.shopHistory.push({
+                ...product,
+                timestamp: new Date().toISOString()
+            });
+            saveState();
+            renderShop();
+            renderDashboard();
+
+            // Celebration alert
+            alert(`🎉 Success! You redeemed the ${product.name}. Check your email or show your redemption code at any Snap Eats partner kiosk!`);
+        }
+
+        /* --- GitHub Modal Controls --- */
+        function openGithubModal() {
+            document.getElementById('github-modal').classList.remove('hidden');
+        }
+
+        function closeGithubModal() {
+            document.getElementById('github-modal').classList.add('hidden');
+        }
+
+        function downloadCodeFile() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initial App Load
+        renderDashboard();
+        renderLog();
+        renderAnalytics();
+        renderShop();
+    </script>
+</body>
+</html>
