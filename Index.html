@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SnapEats - AI Food Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #FAF8F5;
+      --card-bg: #FFFFFF;
+      --card-border: rgba(0, 0, 0, 0.06);
+      --text-main: #1C1917;
+      --text-muted: #78716C;
+      --accent: #E11D48;
+      --accent-light: #FFE4E6;
+      --accent-hover: #BE123C;
+      --secondary-accent: #F59E0B;
+      --success: #10B981;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      --radius: 16px;
+      --avatar-border: transparent;
+      --neon-glow: none;
+      --cyber-filter: none;
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0F172A;
+      --card-bg: #1E293B;
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --accent: #FB7185;
+      --accent-light: rgba(251, 113, 133, 0.15);
+      --accent-hover: #F43F5E;
+      --secondary-accent: #FBBF24;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Owned Theme Accessories */
+    body.theme-golden-frame .user-avatar { border: 3px solid #F59E0B !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+    body.theme-neon { --accent: #00F0FF !important; --accent-hover: #00B8C4 !important; --accent-light: rgba(0, 240, 255, 0.15) !important; }
+    body.theme-cyberpunk { filter: saturate(1.3) contrast(1.05); }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; opacity: 0.6; }
+
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+      padding-bottom: 80px;
+      background-color: var(--bg-color);
+      box-shadow: 0 0 40px rgba(0,0,0,0.05);
+    }
+
+    header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(250, 248, 245, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      border-bottom: 1px solid var(--card-border);
+    }
+    [data-theme="dark"] header { background: rgba(15, 23, 42, 0.85); }
+
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.25rem; color: var(--accent); }
+    .header-controls { display: flex; align-items: center; gap: 10px; }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: var(--shadow-sm);
+    }
+    .badge.pulse { animation: badgePulse 0.5s ease-in-out; }
+    @keyframes badgePulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+    .icon-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+    .icon-btn:active { transform: scale(0.92); }
+
+    main { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+    .tab-content { display: none; flex-direction: column; gap: 16px; }
+    .tab-content.active { display: flex; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .scan-hero {
+      text-align: center;
+      padding: 24px 16px;
+      background: linear-gradient(135deg, var(--card-bg) 0%, var(--accent-light) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .scan-btn-wrapper { margin: 16px 0; }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 1rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35);
+      transition: all 0.2s;
+    }
+    .btn-primary:active { transform: scale(0.96); }
+
+    .photo-result-card { display: none; flex-direction: column; gap: 12px; animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10deg); } to { opacity: 1; transform: translateY(0); } }
+
+    .uploaded-img { width: 100%; height: 200px; object-fit: cover; border-radius: 12px; }
+
+    .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+    .macro-item { background: var(--bg-color); padding: 8px 4px; border-radius: 10px; }
+    .macro-val { font-weight: 800; font-size: 0.95rem; }
+    .macro-lbl { font-size: 0.7rem; color: var(--text-muted); }
+
+    .recommendation-card {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(225, 29, 72, 0.05) 100%);
+      border-left: 4px solid var(--secondary-accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; text-align: center; }
+
+    .chat-container { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 4px; }
+    .chat-msg {
+      background: var(--bg-color);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      align-self: flex-start;
+      animation: slideIn 0.3s ease-out;
+      border-left: 3px solid var(--accent);
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10deg); } to { opacity: 1; transform: translateX(0); } }
+
+    .chat-input-wrapper { display: flex; gap: 8px; margin-top: 8px; }
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+      background: var(--bg-color);
+      color: var(--text-main);
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .chat-input:focus { border-color: var(--accent); }
+
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .shop-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 14px; }
+    .shop-img { font-size: 2.2rem; }
+    .shop-title { font-weight: 700; font-size: 0.85rem; }
+    .shop-cost { font-size: 0.75rem; color: var(--secondary-accent); font-weight: 700; }
+    .btn-buy {
+      padding: 6px 14px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      background: var(--accent-light);
+      color: var(--accent);
+      cursor: pointer;
+      width: 100%;
+    }
+    .btn-buy.owned { background: var(--bg-color); color: var(--text-muted); cursor: default; }
+
+    .nav-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 16px 0;
+      z-index: 10;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-weight: 600;
+    }
+    .nav-item.active { color: var(--accent); }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      width: 100%;
+      max-width: 380px;
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .shimmer {
+      background: linear-gradient(90deg, var(--bg-color) 0%, var(--card-border) 50%, var(--bg-color) 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+
+  <div class="app-container">
+    <header>
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        SnapEats
+      </div>
+      <div class="header-controls">
+        <div class="badge" id="streak-badge">🔥 <span id="streak-val">0</span>d</div>
+        <div class="badge" id="points-badge">⭐ <span id="points-val">0</span> pts</div>
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle Theme">🌙</button>
+      </div>
+    </header>
+
+    <main>
+      <!-- TAB 1: SCAN -->
+      <div class="tab-content active" id="tab-scan">
+        <div class="card scan-hero">
+          <h2 style="font-size:1.2rem; font-weight:800; margin-bottom:4px;">Snap Your Food</h2>
+          <p style="font-size:0.8rem; color:var(--text-muted);">AI estimates macros instantly from a photo.</p>
+          <div class="scan-btn-wrapper">
+            <button class="btn-primary" onclick="document.getElementById('file-input').click()">
+              📸 Take or Upload Photo
+            </button>
+            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+          </div>
+          <p style="font-size:0.7rem; color:var(--text-muted); cursor:pointer; text-decoration:underline;" onclick="testSampleScan()">Or test with a sample meal 🥗</p>
+        </div>
+
+        <div class="card photo-result-card" id="scan-result-card">
+          <img id="scanned-img" class="uploaded-img" src="" alt="Scanned Meal">
+          <div>
+            <h3 id="dish-name" style="font-size:1.1rem; font-weight:700;">Analyzing...</h3>
+            <p id="dish-desc" style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;"></p>
+          </div>
+          <div class="macro-grid">
+            <div class="macro-item"><div class="macro-val" id="res-cal">0</div><div class="macro-lbl">kcal</div></div>
+            <div class="macro-item"><div class="macro-val" id="res-pro">0g</div><div class="macro-lbl">Protein</div></div>
+            <div class="macro-item"><div class="macro-val" id="res-carb">0g</div><div class="macro-lbl">Carbs</div></div>
+            <div class="macro-item"><div class="macro-val" id="res-fat">0g</div><div class="macro-lbl">Fat</div></div>
+          </div>
+          <button class="btn-primary" style="width:100%; justify-content:center; margin-top:4px;" onclick="addScannedMealToTotals()">+ Add Meal to Day</button>
+        </div>
+      </div>
+
+      <!-- TAB 2: CHAT & LOG -->
+      <div class="tab-content" id="tab-chat">
+        <div class="card recommendation-card" id="rec-card">
+          <span style="font-size:1.2rem;">💡</span>
+          <span id="rec-text">Log your first meal to get live macro advice!</span>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="font-size:0.95rem; font-weight:700;">Daily Totals</h3>
+            <button onclick="resetDay()" style="background:none; border:none; color:var(--accent); font-size:0.75rem; font-weight:700; cursor:pointer;">Reset</button>
+          </div>
+          <div class="totals-grid">
+            <div class="macro-item"><div class="macro-val" id="tot-cal">0</div><div class="macro-lbl">/ <span id="goal-lbl">2000</span> kcal</div></div>
+            <div class="macro-item"><div class="macro-val" id="tot-pro">0g</div><div class="macro-lbl">Protein</div></div>
+            <div class="macro-item"><div class="macro-val" id="tot-carb">0g</div><div class="macro-lbl">Carbs</div></div>
+            <div class="macro-item"><div class="macro-val" id="tot-fat">0g</div><div class="macro-lbl">Fat</div></div>
+          </div>
+        </div>
+
+        <div class="card" style="flex:1; display:flex; flex-direction:column; justify-content:space-between; min-height:260px;">
+          <div class="chat-container" id="chat-box">
+            <div class="chat-msg">Type ingredients like "200g chicken breast" or "1 tbsp olive oil" below!</div>
+          </div>
+          <div class="chat-input-wrapper">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Add ingredient..." onkeypress="if(event.key==='Enter') sendIngredient()">
+            <button class="icon-btn" onclick="sendIngredient()" style="background:var(--accent); color:white; border:none;">➔</button>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width:100%; justify-content:center; background:var(--success); box-shadow:none;" onclick="triggerEndDay()">
+          🌙 End Day & Earn Points
+        </button>
+      </div>
+
+      <!-- TAB 3: SHOP -->
+      <div class="tab-content" id="tab-shop">
+        <div class="card" style="display:flex; align-items:center; gap:12px;">
+          <div class="user-avatar" style="width:48px; height:48px; background:var(--accent-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">👤</div>
+          <div>
+            <h3 style="font-size:0.95rem; font-weight:700;">Reward Shop</h3>
+            <p style="font-size:0.75rem; color:var(--text-muted);">Redeem points for real vouchers & themes.</p>
+          </div>
+        </div>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+    </main>
+
+    <nav class="nav-bar">
+      <button class="nav-item active" onclick="switchTab('scan', this)">
+        <span>📸</span><span>Scan</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('chat', this)">
+        <span>🥗</span><span>Log & Chat</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('shop', this)">
+        <span>🛍️</span><span>Shop</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- End Day Summary Modal -->
+  <div class="modal-overlay" id="endday-modal">
+    <div class="modal-card">
+      <h2 style="font-size:1.3rem; font-weight:800;">🎉 Day Completed!</h2>
+      <p id="endday-summary" style="font-size:0.85rem; color:var(--text-muted);"></p>
+      <button class="btn-primary" style="justify-content:center; width:100%;" onclick="closeModal()">Awesome!</button>
+    </div>
+  </div>
+
+  <script>
+    // Embedded API Key for school demo
+    const DEFAULT_GEMINI_KEY = "YOUR_GEMINI_API_KEY_HERE";
+
+    function getApiKey() {
+      const userKey = localStorage.getItem('gemini_api_key');
+      if (userKey && userKey.trim() !== '') return userKey;
+      return DEFAULT_GEMINI_KEY;
+    }
+
+    let state = {
+      theme: 'light',
+      goal: 2000,
+      points: 120,
+      streak: 3,
+      loggedItems: [],
+      totals: { cal: 0, pro: 0, carb: 0, fat: 0 },
+      ownedItems: [],
+      lastScannedMeal: null
+    };
+
+    const SHOP_ITEMS = [
+      { id: 'coffee', name: 'Free Coffee', cost: 50, icon: '☕', type: 'reward' },
+      { id: 'snack', name: 'Snack Pack', cost: 100, icon: '🍿', type: 'reward' },
+      { id: 'frame', name: 'Golden Frame', cost: 30, icon: '🖼️', type: 'theme' },
+      { id: 'neon', name: 'Neon Theme', cost: 80, icon: '⚡', type: 'theme' },
+      { id: 'cyber', name: 'Cyberpunk Mode', cost: 120, icon: '🕶️', type: 'theme' }
+    ];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      initCanvas();
+      setupTheme();
+      updateUI();
+      renderShop();
+    });
+
+    function loadState() {
+      const saved = localStorage.getItem('snapeats_state');
+      if (saved) state = { ...state, ...JSON.parse(saved) };
+      applyEquippedThemes();
+    }
+
+    function saveState() {
+      localStorage.setItem('snapeats_state', JSON.stringify(state));
+      updateUI();
+    }
+
+    function setupTheme() {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (!localStorage.getItem('snapeats_theme')) state.theme = prefersDark ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', state.theme);
+      document.getElementById('theme-toggle').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+
+      document.getElementById('theme-toggle').onclick = () => {
+        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('snapeats_theme', state.theme);
+        document.documentElement.setAttribute('data-theme', state.theme);
+        document.getElementById('theme-toggle').textContent = state.theme === 'dark' ? '☀️' : '🌙';
+      };
+    }
+
+    function updateUI() {
+      document.getElementById('points-val').textContent = state.points;
+      document.getElementById('streak-val').textContent = state.streak;
+      document.getElementById('goal-lbl').textContent = state.goal;
+      document.getElementById('tot-cal').textContent = state.totals.cal;
+      document.getElementById('tot-pro').textContent = state.totals.pro;
+      document.getElementById('tot-carb').textContent = state.totals.carb;
+      document.getElementById('tot-fat').textContent = state.totals.fat;
+      updateRecommendation();
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    async function handleImageUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(evt) {
+        const base64Data = evt.target.result.split(',')[1];
+        document.getElementById('scanned-img').src = evt.target.result;
+        const card = document.getElementById('scan-result-card');
+        card.style.display = 'flex';
+        card.classList.add('shimmer');
+
+        const result = await analyzeWithGemini(base64Data);
+        card.classList.remove('shimmer');
+        renderScanResult(result);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function analyzeWithGemini(base64Image) {
+      const apiKey = getApiKey();
+      if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE") return getMockScanResult();
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: "Analyze this meal photo. Return strictly JSON with keys: dishName (string), description (string), calories (number), protein (number), carbs (number), fat (number)." },
+                { inlineData: { mimeType: "image/jpeg", data: base64Image } }
+              ]
+            }]
+          })
+        });
+        const data = await res.json();
+        const text = data.candidates[0].content.parts[0].text;
+        const cleanJson = text.replace(/```json|```/g, '').trim();
+        return JSON.parse(cleanJson);
+      } catch (err) {
+        return getMockScanResult();
+      }
+    }
+
+    function getMockScanResult() {
+      return {
+        dishName: "Grilled Chicken Salad",
+        description: "Fresh greens with chicken breast, avocado, and light vinaigrette.",
+        calories: 420, protein: 38, carbs: 12, fat: 18
+      };
+    }
+
+    function testSampleScan() {
+      document.getElementById('scanned-img').src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+      const card = document.getElementById('scan-result-card');
+      card.style.display = 'flex';
+      renderScanResult(getMockScanResult());
+    }
+
+    function renderScanResult(res) {
+      state.lastScannedMeal = res;
+      document.getElementById('dish-name').textContent = res.dishName;
+      document.getElementById('dish-desc').textContent = res.description;
+      document.getElementById('res-cal').textContent = res.calories;
+      document.getElementById('res-pro').textContent = res.protein + 'g';
+      document.getElementById('res-carb').textContent = res.carbs + 'g';
+      document.getElementById('res-fat').textContent = res.fat + 'g';
+    }
+
+    function addScannedMealToTotals() {
+      if (!state.lastScannedMeal) return;
+      const m = state.lastScannedMeal;
+      state.totals.cal += m.calories;
+      state.totals.pro += m.protein;
+      state.totals.carb += m.carbs;
+      state.totals.fat += m.fat;
+
+      addChatMessage(`Added scanned meal: ${m.dishName} (+${m.calories} kcal)`);
+      saveState();
+      document.getElementById('scan-result-card').style.display = 'none';
+      switchTab('chat', document.querySelectorAll('.nav-item')[1]);
+    }
+
+    function sendIngredient() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      let cal = 150, pro = 10, carb = 15, fat = 5;
+      if (text.toLowerCase().includes('chicken')) { cal = 220; pro = 30; carb = 0; fat = 5; }
+      else if (text.toLowerCase().includes('rice')) { cal = 180; pro = 4; carb = 40; fat = 1; }
+      else if (text.toLowerCase().includes('oil')) { cal = 120; pro = 0; carb = 0; fat = 14; }
+
+      state.totals.cal += cal;
+      state.totals.pro += pro;
+      state.totals.carb += carb;
+      state.totals.fat += fat;
+
+      addChatMessage(`Added "${text}" (+${cal} kcal)`);
+      input.value = '';
+      saveState();
+    }
+
+    function addChatMessage(msg) {
+      const box = document.getElementById('chat-box');
+      const el = document.createElement('div');
+      el.className = 'chat-msg';
+      el.textContent = msg;
+      box.appendChild(el);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function updateRecommendation() {
+      const rem = state.goal - state.totals.cal;
+      const rec = document.getElementById('rec-text');
+
+      if (rem <= 0) rec.textContent = "You've hit your daily goal! Keep evening meals light. 🎉";
+      else if (rem < 400) rec.textContent = "Close to your limit! Suggesting a light protein snack or green tea.";
+      else if (state.totals.pro < 40) rec.textContent = "Protein is low. Suggesting chicken breast, eggs, or Greek yogurt.";
+      else rec.textContent = "Looking balanced! Suggesting a wholesome bowl with veggies and complex carbs.";
+    }
+
+    function triggerEndDay() {
+      const remaining = state.goal - state.totals.cal;
+      let basePoints = Math.max(0, remaining);
+
+      let mult = 1;
+      if (state.streak >= 15) mult = 3;
+      else if (state.streak >= 8) mult = 2;
+      else if (state.streak >= 4) mult = 1.5;
+
+      const earned = Math.round(basePoints * mult);
+
+      if (state.totals.cal <= state.goal && state.totals.cal > 0) {
+        state.streak += 1;
+        state.points += earned;
+        document.getElementById('endday-summary').innerHTML = `🔥 <b>${state.streak}-Day Streak!</b><br>You earned <b>${earned} points</b> (${basePoints} base × ${mult}x bonus multiplier).`;
+      } else {
+        state.streak = 0;
+        document.getElementById('endday-summary').textContent = `You exceeded your limit. Streak reset to 0. Tomorrow is a fresh start!`;
+      }
+
+      saveState();
+      document.getElementById('endday-modal').style.display = 'flex';
+      document.getElementById('points-badge').classList.add('pulse');
+    }
+
+    function closeModal() {
+      document.getElementById('endday-modal').style.display = 'none';
+      resetDay();
+    }
+
+    function resetDay() {
+      state.totals = { cal: 0, pro: 0, carb: 0, fat: 0 };
+      document.getElementById('chat-box').innerHTML = '<div class="chat-msg">Log ingredients to calculate daily totals!</div>';
+      saveState();
+    }
+
+    function renderShop() {
+      const grid = document.getElementById('shop-grid');
+      grid.innerHTML = SHOP_ITEMS.map(item => {
+        const isOwned = state.ownedItems.includes(item.id);
+        return `
+          <div class="card shop-item">
+            <div class="shop-img">${item.icon}</div>
+            <div class="shop-title">${item.name}</div>
+            <div class="shop-cost">${item.cost} pts</div>
+            <button class="btn-buy ${isOwned ? 'owned' : ''}" onclick="buyShopItem('${item.id}', ${item.cost})">
+              ${isOwned ? 'Equipped' : 'Buy'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function buyShopItem(id, cost) {
+      if (state.ownedItems.includes(id)) return;
+      if (state.points < cost) { alert("Not enough points!"); return; }
+
+      state.points -= cost;
+      state.ownedItems.push(id);
+      applyEquippedThemes();
+      saveState();
+      renderShop();
+    }
+
+    function applyEquippedThemes() {
+      document.body.className = '';
+      if (state.ownedItems.includes('frame')) document.body.classList.add('theme-golden-frame');
+      if (state.ownedItems.includes('neon')) document.body.classList.add('theme-neon');
+      if (state.ownedItems.includes('cyber')) document.body.classList.add('theme-cyberpunk');
+    }
+
+    function initCanvas() {
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+
+      const dots = Array.from({ length: 25 }, () => ({
+        x: Math.random() * width, y: Math.random() * height,
+        r: Math.random() * 3 + 1, dx: (Math.random() - 0.5) * 0.5, dy: (Math.random() - 0.5) * 0.5
+      }));
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = state.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(225, 29, 72, 0.12)';
+        dots.forEach(d => {
+          d.x += d.dx; d.y += d.dy;
+          if (d.x < 0 || d.x > width) d.dx *= -1;
+          if (d.y < 0 || d.y > height) d.dy *= -1;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
